@@ -2,7 +2,7 @@
 ===========
 
 
-TLS Termination Proxy(TTP) 구성을 위한 인증서 생성
+선행조건 1. TLS Termination Proxy(TTP) 구성을 위한 인증서 생성
 =============================================
 TTP를 위한 TLS 인증서 생성
 
@@ -55,7 +55,63 @@ tls.key: 1679 bytes
 </code>
 </pre>
 
-
+선행조건2. 동적 볼륨 프로비저닝을 위한 Ceph 스토리지 구축 (Rook 사용)
+==========================================================
+ROOK 다운로드
+<pre>
+<code>
+$ cd ~
+$ git clone --single-branch --branch release-1.3 https://github.com/rook/rook.git
+</code>
 </pre>
 
+Ceph Cluster 생성
+<pre>
+<code>
+$ cd ~/rook/cluster/examples/kubernetes/ceph
+$ kubectl create -f common.yaml
+$ kubectl create -f operator.yaml
+$ kubectl create -f cluster.yaml
+
+# Public cloud의 경우 cluster-on-pvc.yaml로 생성
+# Minikube의 경우 cluster-test.yaml로 생성
+</code>
+</pre>
+
+Ceph Toolbox 생성 및 Ceph healthcheck
+<pre>
+<code>
+$ kubectl create -f toolbox.yaml
+$ kubectl exec <rook-ceph-tools 파드명> -n rook-ceph --- ceph status
+</code>
+</pre>
+
+RBD 생성
+<pre>
+<code>
+$ kubectl create -f csi/rbd/storageclass.yaml
+
+# Production Erasure Coding의 경우 storageclass-ex.yaml로 생성
+# Minikube의 경우 storageclass-test.yaml로 ㅅㅐㅇ성
+</code>
+</pre>
+
+CephFS 생성
+<pre>
+<code>
+$ kubectl create -f filesystem.yaml
+$ kubectl create -f csi/cephfs/storageclass.yaml
+</code>
+</pre>
+
+Storageclass 생성여부 확인
+<pre>
+<code>
+$ kubectl get storageclass
+
+NAME                        PROVISIONER                     AGE
+rook-ceph-block             rook-ceph.rbd.csi.ceph.com      9h
+rook-cephfs                 rook-ceph.cephfs.csi.ceph.com   9h
+</code>
+</pre>
 
